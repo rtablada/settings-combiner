@@ -8,13 +8,13 @@ importers:
 
   .:
     dependencies:
-      '@types/lodash':
-        specifier: ^4.17.14
-        version: 4.17.14
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
     devDependencies:
+      '@types/lodash':
+        specifier: ^4.17.14
+        version: 4.17.14
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10

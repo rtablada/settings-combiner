@@ -3,6 +3,10 @@
   "displayName": "settings-combiner",
   "description": "Merge multiple JSON files into a single settings.json to allow shared team and uncommitted personal settings",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rtablada/settings-combiner/"
+  },
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -42,7 +46,6 @@
           "type": "boolean",
           "description": "Run the combination check when any of the specified files are changed.",
           "default": true
-        }
         },
         "settingsCombiner.warnDiff": {
           "type": "boolean",
@@ -52,6 +55,7 @@
       }
     }
   },
+  "packageManager": "pnpm@9.15.3",
   "scripts": {
     "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
