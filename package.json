@@ -21,7 +21,7 @@
           "type": "array",
           "description": "List of files in .vscode to deep merge into .vscode/settings.json, later settings will take precedence",
           "default": [
-            "personal.settings.json",
+            "user.settings.json",
             "team.settings.json"
           ],
           "items": {
@@ -32,6 +32,16 @@
           "type": "string",
           "description": "Path of the output file to write the merged settings to",
           "default": "settings.json"
+        },
+        "settingsCombiner.runAtStart": {
+          "type": "boolean",
+          "description": "Run the combination check when the editor is opened.",
+          "default": true
+        },
+        "settingsCombiner.watchForChanges": {
+          "type": "boolean",
+          "description": "Run the combination check when any of the specified files are changed.",
+          "default": true
         }
       }
     }

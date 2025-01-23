@@ -41,12 +41,12 @@ export function activate(context: vscode.ExtensionContext) {
         ".vscode",
         config.output
       );
-      let outputValue = null;
+      let existingSettings = null;
 
       try {
         await fs.access(outputPath);
         const outputStr = await fs.readFile(outputPath, "utf8");
-        outputValue = JSON.parse(outputStr);
+        existingSettings = JSON.parse(outputStr);
       } catch {}
 
       try {
@@ -56,13 +56,36 @@ export function activate(context: vscode.ExtensionContext) {
         );
         let result = merge({}, ...settingsValues);
 
-        if (JSON.stringify(result) !== JSON.stringify(outputValue)) {
-          const userResponse = await vscode.window.showInformationMessage(
-            "Your settings differ from the result of settings-combiner. Do you want to update the existing project settings?",
+        if (JSON.stringify(result) !== JSON.stringify(existingSettings)) {
+          let userResponse = await vscode.window.showInformationMessage(
+            "Your settings differ from the result of settings-combiner. Do you want to update the existing project settings?" +
+              "\n" +
+              "If this is the first time you are seeing this message, you likely want to backup your settings as user.settings.json.",
             { modal: true },
             "Yes",
+            "Backup existing settings",
             "No"
           );
+
+          if (userResponse === "Backup existing settings") {
+            const backupPath = await vscode.window.showInputBox({
+              prompt: "Enter the backup file path for your setting backup",
+              value: ".vscode/backup.settings.json",
+            });
+
+            if (backupPath) {
+              await fs.writeFile(
+                path.join(workspaceFolder.uri.fsPath, backupPath),
+                JSON.stringify(existingSettings, null, 2),
+                "utf8"
+              );
+              vscode.window.showInformationMessage(
+                `Backup created at ${backupPath}`
+              );
+
+              userResponse = "Yes";
+            }
+          }
 
           if (userResponse !== "Yes") {
             return;
@@ -82,6 +105,8 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.window.showErrorMessage(e.message);
         }
       }
+
+      return;
     });
   }
 
@@ -95,16 +120,20 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  const watcher = vscode.workspace.createFileSystemWatcher(
-    "**/.vscode/**/*.json"
-  );
-  watcher.onDidChange(checkForChanges);
-  watcher.onDidCreate(checkForChanges);
-  watcher.onDidDelete(checkForChanges);
+  if (config.watchForChanges) {
+    const watcher = vscode.workspace.createFileSystemWatcher(
+      "**/.vscode/**/*.json"
+    );
+    watcher.onDidChange(checkForChanges);
+    watcher.onDidCreate(checkForChanges);
+    watcher.onDidDelete(checkForChanges);
 
-  context.subscriptions.push(watcher);
+    context.subscriptions.push(watcher);
+  }
 
-  combineFiles();
+  if (config.runAtStart) {
+    combineFiles();
+  }
 }
 
 // This method is called when your extension is deactivated

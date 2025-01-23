@@ -1,71 +1,33 @@
 # Settings Combiner
 
-This is the README for your extension "settings-combiner". After writing up a brief description, we recommend including the following sections.
+This addon helps teams keep their shared settings and user settings in check.
+Since VSCode doesn't support multiple settings files, this addon allows you to have multiple settings files (usually one checked in by your team and then some personal overrides) and then combine them into the `.vscode/settings.json` file that is used by the system.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+By default this extension looks for a `.vscode/user.settings.json` and a `.vscode/team.settings.json` file in your workspace.
+These files will be combined into the `.vscode/settings.json` file with any settings from `.vscode/team.settings.json`.
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+The combination check will run when you open your editor/workspace and in case any of the `*.settings.json` files are changed.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+- `myExtension.runAtStart` [default: true]: Run the combination check when the editor is opened.
+- `myExtension.watchForChanges` [default: true]: Run the combination check when any of the specified files are changed.
+- `settingsCombiner.inputs` [default: `["user.settings.json", "team.settings.json"]`]: The files to combine into the desired output file.
+- `settingsCombiner.output` [default: `"settings.json"`]: The file to output the combined settings to.
 
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
+> [!NOTE]
+> The `settingsCombiner.inputs` and `settingsCombiner.output` settings are relative to the `.vscode` folder in your workspace.
 
 ## Release Notes
 
 Users appreciate release notes as you update your extension.
 
+### Known bugs
+
+If you have autoformat on save, the alert to save changes may trigger twice.
+
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release with support for combining settings files, running at start, and watching for changes.
