@@ -16,6 +16,7 @@ The combination check will run when you open your editor/workspace and in case a
 - `myExtension.watchForChanges` [default: true]: Run the combination check when any of the specified files are changed.
 - `settingsCombiner.inputs` [default: `["user.settings.json", "team.settings.json"]`]: The files to combine into the desired output file.
 - `settingsCombiner.output` [default: `"settings.json"`]: The file to output the combined settings to.
+- `settingsCombiner.warnDiff` [default: true]: When set to true you will be warned if the combined settings file is different from the current settings file and have an option to backup the current settings.
 
 > [!NOTE]
 > The `settingsCombiner.inputs` and `settingsCombiner.output` settings are relative to the `.vscode` folder in your workspace.

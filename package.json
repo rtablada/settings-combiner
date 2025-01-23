@@ -43,6 +43,12 @@
           "description": "Run the combination check when any of the specified files are changed.",
           "default": true
         }
+        },
+        "settingsCombiner.warnDiff": {
+          "type": "boolean",
+          "description": "When set to true you will be warned if the combined settings file is different from the current settings file and have an option to backup the current settings.",
+          "default": true
+        }
       }
     }
   },

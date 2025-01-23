@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
         let result = merge({}, ...settingsValues);
 
         if (JSON.stringify(result) !== JSON.stringify(existingSettings)) {
-          let userResponse = await vscode.window.showInformationMessage(
+          let userResponse = config.warnDiff ? await vscode.window.showInformationMessage(
             "Your settings differ from the result of settings-combiner. Do you want to update the existing project settings?" +
               "\n" +
               "If this is the first time you are seeing this message, you likely want to backup your settings as user.settings.json.",
@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
             "Yes",
             "Backup existing settings",
             "No"
-          );
+          ) : 'Yes';
 
           if (userResponse === "Backup existing settings") {
             const backupPath = await vscode.window.showInputBox({
