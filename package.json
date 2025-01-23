@@ -9,15 +9,32 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:.vscode/**"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "settings-combiner.helloWorld",
-        "title": "Hello World"
+    "configuration": {
+      "title": "Settings Combiner",
+      "properties": {
+        "settingsCombiner.inputs": {
+          "type": "array",
+          "description": "List of files in .vscode to deep merge into .vscode/settings.json, later settings will take precedence",
+          "default": [
+            "personal.settings.json",
+            "team.settings.json"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "settingsCombiner.output": {
+          "type": "string",
+          "description": "Path of the output file to write the merged settings to",
+          "default": "settings.json"
+        }
       }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
@@ -34,16 +51,20 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.96.0",
+    "@types/lodash": "^4.17.14",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.96.0",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
-    "eslint": "^9.16.0",
-    "esbuild": "^0.24.0",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.7.2",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.16.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
   }
 }

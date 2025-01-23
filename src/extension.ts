@@ -1,25 +1,75 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import _ from "lodash";
+const fs = require("fs/promises");
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+const path = require("path");
+
+async function getSettingsValues(
+  rootPath: string,
+  inputs: string[]
+): Promise<object[]> {
+  return (
+    await Promise.all(
+      inputs.map(async (input) => {
+        const settingsPath = path.join(rootPath, ".vscode", input);
+
+        try {
+          await fs.access(settingsPath);
+        } catch {
+          return null;
+        }
+
+        const str = await fs.readFile(settingsPath, "utf8");
+
+        return JSON.parse(str);
+      })
+    )
+  ).filter((a) => a);
+}
+
+const deepMerge = (...targets: object[]): object => {
+  return _.mergeWith({}, ...targets, (objValue: unknown, srcValue: unknown) => {
+    if (_.isArray(objValue) && _.isArray(srcValue)) {
+      return objValue.concat(srcValue);
+    } else if (_.isObject(objValue) && _.isArray(srcValue)) {
+      return deepMerge(objValue, srcValue);
+    }
+  });
+};
+
 export function activate(context: vscode.ExtensionContext) {
+  vscode.window.showInformationMessage("Hello World from settings-combiner!");
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "settings-combiner" is now active!');
+  function combineFiles() {
+    const config = vscode.workspace.getConfiguration("settingsCombiner");
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('settings-combiner.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from settings-combiner!');
-	});
+    if (config.inputs === undefined || config.output === undefined) {
+      return;
+    }
 
-	context.subscriptions.push(disposable);
+    vscode.workspace.workspaceFolders?.forEach(async (workspaceFolder) => {
+      try {
+        let settingsValues = await getSettingsValues(
+          workspaceFolder.uri.fsPath,
+          config.inputs
+        );
+        let result = _.merge({}, ...settingsValues);
+        const outputPath = path.join(
+          workspaceFolder.uri.fsPath,
+          ".vscode",
+          config.output
+        );
+
+        await fs.writeFile(outputPath, JSON.stringify(result, null, 2), "utf8");
+      } catch (e) {
+        if (e instanceof Error) {
+          vscode.window.showErrorMessage(e.message);
+        }
+      }
+    });
+  }
+
+  combineFiles();
 }
 
 // This method is called when your extension is deactivated
