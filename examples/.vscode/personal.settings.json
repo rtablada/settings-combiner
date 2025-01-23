@@ -1,7 +1,9 @@
 {
     "editor.formatOnSave": false,
+    
 
     "files.associations": {
-        ".eslint.json": "jsonc"
+        ".eslint.json": "jsonc",
+        ".prettierrc": "jsonc"
     }
 }

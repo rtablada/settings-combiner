@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import _ from "lodash";
+import { mergeWith, isArray, isObject, merge } from "lodash";
 const fs = require("fs/promises");
 
 const path = require("path");
@@ -27,40 +27,56 @@ async function getSettingsValues(
   ).filter((a) => a);
 }
 
-const deepMerge = (...targets: object[]): object => {
-  return _.mergeWith({}, ...targets, (objValue: unknown, srcValue: unknown) => {
-    if (_.isArray(objValue) && _.isArray(srcValue)) {
-      return objValue.concat(srcValue);
-    } else if (_.isObject(objValue) && _.isArray(srcValue)) {
-      return deepMerge(objValue, srcValue);
-    }
-  });
-};
-
 export function activate(context: vscode.ExtensionContext) {
-  vscode.window.showInformationMessage("Hello World from settings-combiner!");
+  const config = vscode.workspace.getConfiguration("settingsCombiner");
 
   function combineFiles() {
-    const config = vscode.workspace.getConfiguration("settingsCombiner");
-
     if (config.inputs === undefined || config.output === undefined) {
       return;
     }
 
     vscode.workspace.workspaceFolders?.forEach(async (workspaceFolder) => {
+      const outputPath = path.join(
+        workspaceFolder.uri.fsPath,
+        ".vscode",
+        config.output
+      );
+      let outputValue = null;
+
+      try {
+        await fs.access(outputPath);
+        const outputStr = await fs.readFile(outputPath, "utf8");
+        outputValue = JSON.parse(outputStr);
+      } catch {}
+
       try {
         let settingsValues = await getSettingsValues(
           workspaceFolder.uri.fsPath,
           config.inputs
         );
-        let result = _.merge({}, ...settingsValues);
-        const outputPath = path.join(
-          workspaceFolder.uri.fsPath,
-          ".vscode",
-          config.output
-        );
+        let result = merge({}, ...settingsValues);
 
-        await fs.writeFile(outputPath, JSON.stringify(result, null, 2), "utf8");
+        if (JSON.stringify(result) !== JSON.stringify(outputValue)) {
+          const userResponse = await vscode.window.showInformationMessage(
+            "Your settings differ from the result of settings-combiner. Do you want to update the existing project settings?",
+            { modal: true },
+            "Yes",
+            "No"
+          );
+
+          if (userResponse !== "Yes") {
+            return;
+          }
+
+          await fs.writeFile(
+            outputPath,
+            JSON.stringify(result, null, 2),
+            "utf8"
+          );
+          vscode.window.showInformationMessage(
+            "Project settings have been merged and updated. You may need to reload the window to see the changes."
+          );
+        }
       } catch (e) {
         if (e instanceof Error) {
           vscode.window.showErrorMessage(e.message);
@@ -68,6 +84,25 @@ export function activate(context: vscode.ExtensionContext) {
       }
     });
   }
+
+  function checkForChanges(uri: vscode.Uri) {
+    const paths: string[] = config.inputs.map((input: string) =>
+      path.join(".vscode", input)
+    );
+
+    if (paths.some((p) => uri.fsPath.endsWith(p))) {
+      combineFiles();
+    }
+  }
+
+  const watcher = vscode.workspace.createFileSystemWatcher(
+    "**/.vscode/**/*.json"
+  );
+  watcher.onDidChange(checkForChanges);
+  watcher.onDidCreate(checkForChanges);
+  watcher.onDidDelete(checkForChanges);
+
+  context.subscriptions.push(watcher);
 
   combineFiles();
 }
