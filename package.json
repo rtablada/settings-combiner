@@ -59,7 +59,14 @@
           "default": true
         }
       }
-    }
+    },
+    "commands": [
+      {
+        "command": "settings-combiner.combineFiles",
+        "title": "Combine Settings",
+        "category": "Settings Combiner"
+      }
+    ]
   },
   "packageManager": "pnpm@9.15.3",
   "scripts": {

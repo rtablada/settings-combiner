@@ -30,6 +30,10 @@ async function getSettingsValues(
 
 export function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration("settingsCombiner");
+  vscode.commands.registerCommand(
+    "settings-combiner.combineFiles",
+    combineFiles
+  );
 
   function combineFiles() {
     if (config.inputs === undefined || config.output === undefined) {
