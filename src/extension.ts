@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { mergeWith, isArray, isObject, merge } from "lodash";
+import { merge, debounce } from "lodash";
 import { jsonc } from "jsonc";
 const fs = require("fs/promises");
 
@@ -90,7 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
             ? await vscode.window.showInformationMessage(
                 "Your settings differ from the result of settings-combiner. Do you want to update the existing project settings?" +
                   "\n" +
-                  "If this is the first time you are seeing this message, you likely want to backup your settings as user.settings.jsoncjsonc.",
+                  "If this is the first time you are seeing this message, you likely want to backup your settings as user.settings.json",
                 { modal: true },
                 "Yes",
                 "Backup existing settings",
@@ -169,9 +169,9 @@ export function activate(context: vscode.ExtensionContext) {
     const watcher = vscode.workspace.createFileSystemWatcher(
       "**/.vscode/**/*.json"
     );
-    watcher.onDidChange(checkForChanges);
-    watcher.onDidCreate(checkForChanges);
-    watcher.onDidDelete(checkForChanges);
+    watcher.onDidChange(debounce(checkForChanges, 200));
+    watcher.onDidCreate(debounce(checkForChanges, 200));
+    watcher.onDidDelete(debounce(checkForChanges, 200));
 
     context.subscriptions.push(watcher);
   }
