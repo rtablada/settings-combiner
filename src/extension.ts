@@ -5,35 +5,43 @@ const fs = require("fs/promises");
 
 const path = require("path");
 
-async function getSettingsValues(
-  rootPath: string,
-  inputs: string[]
-): Promise<object[]> {
-  return (
-    await Promise.all(
-      inputs.map(async (input) => {
-        const settingsPath = path.join(rootPath, ".vscode", input);
-
-        try {
-          await fs.access(settingsPath);
-        } catch {
-          return null;
-        }
-
-        const str = await fs.readFile(settingsPath, "utf8");
-
-        return jsonc.parse(str);
-      })
-    )
-  ).filter((a) => a);
-}
-
 export function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration("settingsCombiner");
   vscode.commands.registerCommand(
     "settings-combiner.combineFiles",
     combineFiles
   );
+
+  let output = vscode.window.createOutputChannel("Settings Combiner", {
+    log: true,
+  });
+
+  async function getSettingsValues(
+    rootPath: string,
+    inputs: string[]
+  ): Promise<object[]> {
+    return (
+      await Promise.all(
+        inputs.map(async (input) => {
+          const settingsPath = path.join(rootPath, ".vscode", input);
+
+          try {
+            output.info(`File found: ${settingsPath}`);
+            await fs.access(settingsPath);
+          } catch {
+            output.warn(`File not found: ${settingsPath}`);
+            return null;
+          }
+
+          const str = await fs.readFile(settingsPath, "utf8");
+          output.info(`Raw file for "${settingsPath}"`);
+          output.info(str);
+
+          return jsonc.parse(str);
+        })
+      )
+    ).filter((a) => a);
+  }
 
   function combineFiles() {
     if (config.inputs === undefined || config.output === undefined) {
@@ -52,7 +60,15 @@ export function activate(context: vscode.ExtensionContext) {
         await fs.access(outputPath);
         const outputStr = await fs.readFile(outputPath, "utf8");
         existingSettings = jsonc.parse(outputStr);
-      } catch {}
+
+        output.info(`Found existing settings.json at ${outputPath}`);
+        output.info(existingSettings);
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          "An error occurred while reading your existing settings.json or the file does not exist"
+        );
+        output.error(e as Error);
+      }
 
       try {
         let settingsValues = await getSettingsValues(
@@ -65,6 +81,9 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         let result = merge({}, ...settingsValues);
+
+        output.info(`Successfully merged values:`);
+        output.info(result);
 
         if (jsonc.stringify(result) !== jsonc.stringify(existingSettings)) {
           let userResponse = config.warnDiff
@@ -110,8 +129,15 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
       } catch (e) {
+        output.error("An error occurred while combining settings");
+        output.error(e as Error);
+
         if (e instanceof Error) {
           vscode.window.showErrorMessage(e.message);
+        } else {
+          vscode.window.showErrorMessage(
+            "An unknown error occurred while combining settings"
+          );
         }
       }
 
